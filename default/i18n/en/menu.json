@@ -1309,5 +1309,23 @@
   },
   "update.password.user": {
     "label": "User"
+  },
+  "appearance.dock.icon-size": {
+    "label": "Icon size"
+  },
+  "appearance.dock.magnification": {
+    "label": "Magnification"
+  },
+  "appearance.dock.shelf": {
+    "label": "Dock shelf"
+  },
+  "appearance.dock.instances": {
+    "label": "Show instances"
+  },
+  "appearance.dock.workspace-label": {
+    "label": "Workspace label"
+  },
+  "appearance.dock.reset": {
+    "label": "Restore defaults"
   }
 }

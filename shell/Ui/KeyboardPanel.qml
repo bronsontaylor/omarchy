@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import qs.Commons
 import qs.Commons as Commons
 
@@ -161,9 +162,24 @@ PanelWindow {
   // forwarded to registered bar buttons so switching between panel icons
   // works in one click even when the overlay surface is above the bar.
   readonly property real _barStripSize: bar ? barThickness + gap : 0
+  Variants {
+    id: excludedRegions
+    model: Commons.PopupExclusions.forScreen(root.screen ? root.screen.name : "")
+    delegate: Region {
+      required property var modelData
+      intersection: Intersection.Subtract
+      x: modelData.rect.x; y: modelData.rect.y
+      width: modelData.rect.width; height: modelData.rect.height
+    }
+  }
+  property Region cardRegion: Region {
+    x: card.x; y: card.y
+    width: card.width; height: card.height
+  }
   mask: Region {
     width: root.screenW
     height: root.screenH
+    regions: excludedRegions.instances.concat([root.cardRegion])
   }
 
   // Track every layout change between the bar's contentItem and the
@@ -458,45 +474,12 @@ PanelWindow {
     }
   }
 
-  // The panel surface only spans the anchor's screen, and the compositor
-  // hit-tests pointer input per output, so `dismissArea` above can never see
-  // a click on another monitor. Give every other output a transparent twin
-  // whose only job is to catch that click. They exist only while the panel is
-  // logically open (not during the fade-out, matching `dismissArea.enabled`).
-  //
-  // Keyboard focus is None: these must catch the pointer without taking focus
-  // from the panel when the cursor merely crosses onto their output.
-  Variants {
-    model: root.open ? Quickshell.screens : []
-
-    delegate: Component {
-      PanelWindow {
-        required property var modelData
-
-        screen: modelData
-        // Compare by output name: the anchor screen must be known before any
-        // twin maps, or a twin would cover the panel's own output.
-        visible: root.open && !!root.screen && modelData.name !== root.screen.name
-        color: "transparent"
-        exclusionMode: ExclusionMode.Ignore
-
-        WlrLayershell.namespace: "omarchy-keyboard-panel-dismiss"
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-
-        anchors {
-          top: true
-          bottom: true
-          left: true
-          right: true
-        }
-
-        MouseArea {
-          anchors.fill: parent
-          acceptedButtons: Qt.AllButtons
-          onPressed: root.close()
-        }
-      }
+  // Other outputs keep normal pointer focus. Close on entry instead of
+  // covering those outputs with full-screen transparent dismissal surfaces.
+  Connections {
+    target: Hyprland
+    function onFocusedMonitorChanged() {
+      if (root.open && root.screen && Hyprland.focusedMonitor && Hyprland.focusedMonitor.name !== root.screen.name) root.close()
     }
   }
 

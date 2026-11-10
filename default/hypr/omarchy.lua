@@ -28,6 +28,7 @@ require("default.hypr.qconsole")
 require("default.hypr.input")
 require("default.hypr.windows")
 require("default.hypr.pop")
+require("default.hypr.dock")
 require("default.hypr.dictation-backend")
 
 -- Current theme overrides.

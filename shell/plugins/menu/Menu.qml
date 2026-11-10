@@ -321,6 +321,16 @@ Item {
   // re-runs every time its submenu is entered, so a font installed since the
   // shell started shows up without restarting it.
   readonly property var providers: ({
+    "dock-icon-sizes": {
+      script: "current=$(omarchy-dock icon-size); for value in 36 40 44 48 56 64; do printf '%s px\\t%s\\t%s\\n' \"$value\" \"$value\" \"$current\"; done",
+      volatile: true,
+      actionFor: function(value) { return "omarchy-dock icon-size " + Util.shellQuote(value) }
+    },
+    "dock-magnification": {
+      script: "current=$(omarchy-dock magnification); for value in 10 15 20 25 30; do printf '%s%%\\t%s\\t%s\\n' \"$value\" \"$value\" \"$current\"; done",
+      volatile: true,
+      actionFor: function(value) { return "omarchy-dock magnification " + Util.shellQuote(value) }
+    },
     "fonts": {
       script: "current=$(omarchy-font-current 2>/dev/null); omarchy-font-list 2>/dev/null | while read -r f; do [[ -z $f ]] && continue; printf '%s\\t%s\\t%s\\n' \"$f\" \"$f\" \"$current\"; done",
       icon: "",
