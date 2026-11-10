@@ -1327,5 +1327,17 @@
   },
   "appearance.dock.reset": {
     "label": "Restore defaults"
+  },
+  "setup.input.config": {
+    "label": "Input configuration"
+  },
+  "setup.input.window-overview": {
+    "label": "Window overview"
+  },
+  "setup.input.window-overview.middle-click": {
+    "label": "Middle-click"
+  },
+  "setup.input.window-overview.three-finger-up": {
+    "label": "Three-finger swipe up"
   }
 }
