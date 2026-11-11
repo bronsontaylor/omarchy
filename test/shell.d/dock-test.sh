@@ -146,7 +146,10 @@ calls = {}
 windows["address:0xa"].workspace.monitor = { name = "DP-2" }
 o.dock.activate("0xa", 2, "toggle")
 assert(calls[1].kind == "workspace-move" and calls[1].args.monitor == "DP-2", "hidden workspace moves to source output before minimizing")
-assert(calls[3].kind == "move", "window minimizes only after the output is aligned")
+assert(#calls == 2, "window move waits for hidden workspace alignment to commit")
+timers[1]()
+assert(calls[3].kind == "move", "window minimizes on the next compositor tick")
+timers = {}
 hidden.monitor.name = "DP-2"
 calls = {}
 o.dock.activate("0xa", 2, "toggle")

@@ -28,14 +28,14 @@ function o.dock.activate(address, workspace, action)
     hl.dispatch(hl.dsp.focus({ workspace = tostring(current.id) }))
     raise()
   elseif action == "toggle" and window.active then
-    -- The shared hidden workspace may still belong to another output. Its
-    -- monitor determines the animation destination, so align it first.
     local monitor = current and current.monitor
+    local realign = false
     if monitor then
       for _, hidden in ipairs(hl.get_workspaces()) do
         if hidden.name == "special:minimized" and hidden.monitor
             and hidden.monitor.name ~= monitor.name then
           hl.dispatch(hl.dsp.workspace.move({ workspace = "special:minimized", monitor = monitor.name }))
+          realign = true
           break
         end
       end
@@ -46,8 +46,17 @@ function o.dock.activate(address, workspace, action)
       end
     end
     hl.dispatch(hl.dsp.window.tag({ window = target, tag = "+omarchy-minimized-from-" .. workspace }))
-    hl.dispatch(hl.dsp.window.move({ window = target, workspace = "special:minimized", follow = false }))
-    hl.dispatch(hl.dsp.focus({ workspace = tostring(workspace) }))
+    local function minimize()
+      local live = hl.get_window(target)
+      if not live or not live.mapped or not live.workspace or live.workspace.id ~= workspace then return end
+      hl.dispatch(hl.dsp.window.move({ window = target, workspace = "special:minimized", follow = false }))
+      -- A later dock click owns focus; finishing this move must not steal it.
+      if request == generation then hl.dispatch(hl.dsp.focus({ workspace = tostring(workspace) })) end
+    end
+    -- Dispatches commit after the Lua callback returns. Let the workspace move
+    -- land before the window move calculates its animation coordinates.
+    if realign then hl.timer(minimize, { type = "oneshot", timeout = 20 })
+    else minimize() end
   else
     raise()
   end
