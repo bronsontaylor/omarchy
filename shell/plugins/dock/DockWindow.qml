@@ -791,7 +791,13 @@ PanelWindow {
 
       MenuRow {
         text: Commons.I18n.t("dock.settings")
-        onTriggered: Util.execArgv(["omarchy-menu", "summon", "appearance.dock"])
+        onTriggered: {
+          window.closeMenu()
+          Qt.callLater(function() {
+            if (window.dock && window.dock.shell)
+              window.dock.shell.summon("omarchy.menu", JSON.stringify({ menu: "appearance.dock" }))
+          })
+        }
       }
 
       MenuRow {
