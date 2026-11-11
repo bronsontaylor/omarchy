@@ -84,7 +84,7 @@ PanelWindow {
   property real iconSize: targetIconSize
   Behavior on iconSize {
     enabled: window.shown && !window.positionChanging
-    NumberAnimation { id: iconResize; duration: Style.duration(180); easing.type: Easing.OutCubic }
+    NumberAnimation { id: iconResize; duration: Style.duration(280); easing.type: Easing.OutCubic }
   }
   // Each app has a square slot with its icon in the middle, and the slots run
   // straight to the edge of the dock.
