@@ -126,7 +126,9 @@ Item {
             height: layout.cellHeight
             radius: Style.cornerRadius
             color: Commons.Color.popups.background
-            borderSpec: Border.surfaceSpec("popups", "border", index === root.selectedIndex ? Commons.Color.foreground : Commons.Color.popups.border, Style.normalBorderWidth)
+            borderSpec: index === root.selectedIndex
+              ? Border.hyprlandActiveSpec(Commons.Color.accent, Style.normalBorderWidth)
+              : Border.surfaceSpec("hyprland", "inactive-border", Commons.Color.muted, Style.normalBorderWidth)
             clip: true
             ScreencopyView {
               captureSource: root.opened ? tile.modelData.wayland : null
@@ -147,14 +149,6 @@ Item {
               font.pixelSize: Style.font.body
               elide: Text.ElideRight
               horizontalAlignment: Text.AlignHCenter
-            }
-            Rectangle {
-              anchors.fill: parent
-              visible: tile.index === root.selectedIndex
-              color: "transparent"
-              border.color: Commons.Color.foreground
-              border.width: Style.space(2)
-              radius: Style.cornerRadius
             }
             MouseArea {
               anchors.fill: parent
