@@ -71,10 +71,9 @@ PanelWindow {
     }
     return mode
   }
-  readonly property bool shown: !!dock && (dock.autohide || dock.isFloating(workspaceId) || fullscreenMode > 0)
-  // Fullscreen/maximized apps do not hide the dock. Only the user's auto-hide
-  // preference tucks it away until the pointer reaches its edge.
-  readonly property bool autohide: !!dock && dock.autohide
+  readonly property bool shown: !!dock && dock.isFloating(workspaceId) && fullscreenMode < 2
+  // Fullscreen hides the dock; maximized windows reveal it at the screen edge.
+  readonly property bool autohide: !!dock && (dock.autohide || fullscreenMode === 1)
   property bool revealed: false
   readonly property bool menuOpen: menuItem !== null || settingsMenu
   readonly property bool tucked: autohide && !(revealed || menuOpen || dragging || insertIndex >= 0)
