@@ -322,11 +322,13 @@ Item {
   // shell started shows up without restarting it.
   readonly property var providers: ({
     "dock-icon-sizes": {
+      checkAfterLabel: true,
       script: "current=$(omarchy-dock icon-size); for value in 36 40 44 48 56 64; do printf '%s px\\t%s\\t%s\\n' \"$value\" \"$value\" \"$current\"; done",
       volatile: true,
       actionFor: function(value) { return "omarchy-dock icon-size " + Util.shellQuote(value) }
     },
     "dock-magnification": {
+      checkAfterLabel: true,
       script: "current=$(omarchy-dock magnification); for value in 10 15 20 25 30; do printf '%s%%\\t%s\\t%s\\n' \"$value\" \"$value\" \"$current\"; done",
       volatile: true,
       actionFor: function(value) { return "omarchy-dock magnification " + Util.shellQuote(value) }
@@ -463,8 +465,8 @@ Item {
         id: rowId,
         parent: menuId,
         kind: "action",
-        icon: (value === current) ? "✓" : (spec.icon || ""),
-        label: label,
+        icon: (value === current && !spec.checkAfterLabel) ? "✓" : (spec.icon || ""),
+        label: label + (spec.checkAfterLabel && value === current ? " ✓" : ""),
         title: "",
         target: "",
         description: "",
