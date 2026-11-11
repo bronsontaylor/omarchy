@@ -118,7 +118,7 @@ Item {
 
   ListModel { id: itemModel }
 
-  onItemsChanged: syncItemModel()
+  onItemsChanged: Qt.callLater(root.syncItemModel)
 
   function shownKeys() {
     return root.items.map(function(item) { return item.key })
