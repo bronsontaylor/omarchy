@@ -26,7 +26,8 @@ PanelWindow {
   property bool positionReady: false
   property bool positionChanging: false
   property real positionSlide: 0
-  readonly property real positionTravel: window.slotSize + window.iconSize + window.gap + (window.vertical ? body.width : body.height)
+  // Travel only far enough to clear the edge, keeping the exit visible.
+  readonly property real positionTravel: window.gap + (window.vertical ? body.width : body.height)
   readonly property real positionSlideX: positionSlide * (position === "left" ? -positionTravel : position === "right" ? positionTravel : 0)
   readonly property real positionSlideY: positionSlide * (position === "top" ? -positionTravel : position === "bottom" ? positionTravel : 0)
   onRequestedPositionChanged: {
@@ -43,10 +44,11 @@ PanelWindow {
   }
   SequentialAnimation {
     id: positionMove
-    NumberAnimation { target: window; property: "positionSlide"; to: 1; duration: Style.duration(180); easing.type: Easing.Bezier; easing.bezierCurve: Style.easeOut }
+    // Keep the short exit visible instead of front-loading most of its travel.
+    NumberAnimation { target: window; property: "positionSlide"; to: 1; duration: Style.duration(280); easing.type: Easing.OutSine }
     ScriptAction { script: window.position = window.requestedPosition }
     PauseAnimation { duration: Style.duration(80) }
-    NumberAnimation { target: window; property: "positionSlide"; to: 0; duration: Style.duration(240); easing.type: Easing.Bezier; easing.bezierCurve: Style.easeOut }
+    NumberAnimation { target: window; property: "positionSlide"; to: 0; duration: Style.duration(280); easing.type: Easing.OutCubic }
     ScriptAction {
       script: {
         window.hoverStale = true
