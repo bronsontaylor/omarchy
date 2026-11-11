@@ -729,14 +729,14 @@ PanelWindow {
         radius: Style.space(4)
         color: Qt.rgba(Commons.Color.background.r, Commons.Color.background.g, Commons.Color.background.b, 0.92)
         border.width: Math.max(1, Style.space(1))
-        border.color: Qt.rgba(1, 1, 1, 0.2)
+        border.color: Qt.rgba(Commons.Color.foreground.r, Commons.Color.foreground.g, Commons.Color.foreground.b, 0.2)
         Text {
           id: workspaceText
           anchors.centerIn: parent
           text: String(appSlot.otherWorkspace > 10
             ? appSlot.otherWorkspace + 10 : appSlot.otherWorkspace)
           textFormat: Text.PlainText
-          color: "#ffffff"
+          color: Commons.Color.foreground
           font.family: Style.font.family
           font.pixelSize: Style.space(11)
           font.bold: true
