@@ -270,20 +270,6 @@ PanelWindow {
   implicitWidth: window.vertical ? window.gap + window.maximumSlotSize + window.maximumShelfPadding * 2 + window.popupRoom : 0
   implicitHeight: window.vertical ? 0 : window.gap + window.maximumSlotSize + window.maximumShelfPadding * 2 + window.popupRoom
 
-  PopupExclusion {
-    screen: window.screen ? window.screen.name : ""
-    enabled: window.shown && !window.positionChanging
-    target: window.contentShown ? body : edgeTrigger
-    reference: window.contentItem
-    offset: window.origin()
-  }
-  PopupExclusion {
-    screen: window.screen ? window.screen.name : ""
-    enabled: menu.visible
-    target: menu
-    reference: window.contentItem
-    offset: window.origin()
-  }
 
   mask: Region {
     item: window.contentShown && !window.positionChanging ? body : null
