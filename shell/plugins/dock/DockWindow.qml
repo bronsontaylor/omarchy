@@ -459,7 +459,7 @@ PanelWindow {
     width: Style.space(5)
     height: width
     radius: width / 2
-    color: "#ffffff"
+    color: Commons.Color.foreground
     opacity: 0.25 // 75% transparency
     x: body.x + (window.vertical ? (body.width - width) / 2 : boundary - width / 2)
     y: body.y + (window.vertical ? boundary - height / 2 : (body.height - height) / 2)
