@@ -1,4 +1,5 @@
 import QtQuick
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
@@ -675,7 +676,7 @@ PanelWindow {
       event.accepted = false
     }
 
-    // Use configured artwork without tinting, preserving its proportions.
+    // Use configured artwork and proportions; only minimized icons lose color.
     DockIcon {
       id: appIcon
       x: (appSlot.width - width) / 2
@@ -686,6 +687,17 @@ PanelWindow {
       asynchronous: true
       smooth: true
       mipmap: true
+      layer.enabled: true
+      // Keep the grayscale effect sharp when the icon grows on hover.
+      layer.textureSize: Qt.size(Math.ceil(256 * appIcon.artworkRatio), 256)
+      layer.smooth: true
+      layer.effect: MultiEffect {
+        saturation: appSlot.minimized ? -1 : 0
+        Behavior on saturation {
+          enabled: !window.positionChanging
+          NumberAnimation { duration: Style.duration(180); easing.type: Easing.OutCubic }
+        }
+      }
       transform: Translate {
         x: window.vertical ? 0 : appSlot.displayedShift
         y: window.vertical ? appSlot.displayedShift : 0
