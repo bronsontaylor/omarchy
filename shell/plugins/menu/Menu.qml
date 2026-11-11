@@ -323,7 +323,7 @@ Item {
   readonly property var providers: ({
     "dock-icon-sizes": {
       checkAfterLabel: true,
-      script: "current=$(omarchy-dock icon-size); for value in 36 40 44 48 56 64; do printf '%s px\\t%s\\t%s\\n' \"$value\" \"$value\" \"$current\"; done",
+      script: "current=$(omarchy-dock icon-size); for value in 24 30 36 40 44 48 56 64; do printf '%s px\\t%s\\t%s\\n' \"$value\" \"$value\" \"$current\"; done",
       volatile: true,
       actionFor: function(value) { return "omarchy-dock icon-size " + Util.shellQuote(value) }
     },
