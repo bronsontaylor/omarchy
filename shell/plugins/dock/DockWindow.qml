@@ -616,9 +616,9 @@ PanelWindow {
       // Small movements are still clicks. Only a deliberate gesture cancels
       // the click or begins reordering.
       var threshold = Style.space(16)
-      // A minimized window has no live workspace slot to drag to a new order.
+      // Open instances follow workspace order instead of manual dragging.
       // Still suppress the release click after a drag gesture.
-      if (appSlot.minimized) {
+      if (window.dock.instances && appSlot.windowCount > 0) {
         if (Math.hypot(point.x - appSlot.pressPoint.x, point.y - appSlot.pressPoint.y) >= threshold) appSlot.dragged = true
         return
       }
@@ -634,7 +634,10 @@ PanelWindow {
       }
       if (!appSlot.lifted) return
       window.dragOffset = delta
-      window.dropIndex = DockModel.dropIndex(appSlot.index, delta, window.slotSize, appRepeater.count)
+      var count = window.dock.instances
+        ? window.dock.items.filter(function(item) { return item.windows.length === 0 }).length
+        : appRepeater.count
+      window.dropIndex = DockModel.dropIndex(appSlot.index, delta, window.slotSize, count)
     }
 
     mouse.onReleased: function(event) {

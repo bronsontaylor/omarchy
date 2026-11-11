@@ -93,3 +93,4 @@ To move a window off either the scratchpad or the console, send it directly to a
 It takes a little while to get used to navigating your desktop like this, but once you do, it'll be hard to go back to a traditional mouse-driven desktop experience!
 
 On floating workspaces, _Setup > Input > Window overview_ can assign middle-click or three-finger swipe up to a grid of live window previews. Select a preview with the pointer, or use the arrow keys and Enter; Escape dismisses it. Both triggers are off by default. Middle-click remains available to apps on tiled workspaces, and three-finger up keeps its AI-console action there. `omarchy hyprland window-overview` opens the overview directly.
+With _Show instances_ enabled, drag pinned launchers to change their order. Open window instances follow workspace order automatically and cannot be dragged; their positions animate when workspace order changes.

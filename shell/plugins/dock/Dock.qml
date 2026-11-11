@@ -220,6 +220,11 @@ Item {
   }
 
   function moveItem(fromIndex, toIndex) {
+    if (root.instances) {
+      var launchers = root.items.filter(function(item) { return item.windows.length === 0 })
+      if (fromIndex < 0 || fromIndex >= launchers.length) return
+      toIndex = Math.max(0, Math.min(launchers.length - 1, toIndex))
+    }
     if (fromIndex !== toIndex) root.placeAt(root.shownKeys()[fromIndex], toIndex)
   }
 
