@@ -110,12 +110,16 @@ Item {
       }
       Grid {
         id: layout
-        anchors.centerIn: parent
+        // Align every card edge to physical pixels on fractional-scale outputs.
+        readonly property real pixelRatio: Math.max(1, panel.devicePixelRatio)
+        function snap(value) { return Math.round(value * pixelRatio) / pixelRatio }
+        x: snap((parent.width - width) / 2)
+        y: snap((parent.height - height) / 2)
         columns: Math.max(1, Math.ceil(Math.sqrt(root.windows.length * panel.width / Math.max(1, panel.height))))
         readonly property int rowCount: Math.max(1, Math.ceil(root.windows.length / columns))
-        spacing: Style.space(20)
-        readonly property real cellWidth: Math.max(1, Math.min(Style.space(480), (panel.width - Style.space(80) - spacing * (columns - 1)) / columns))
-        readonly property real cellHeight: Math.max(1, Math.min(cellWidth * 0.7, (panel.height - Style.space(80) - spacing * (rowCount - 1)) / rowCount))
+        spacing: snap(Style.space(20))
+        readonly property real cellWidth: snap(Math.max(1, Math.min(Style.space(480), (panel.width - Style.space(80) - spacing * (columns - 1)) / columns)))
+        readonly property real cellHeight: snap(Math.max(1, Math.min(cellWidth * 0.7, (panel.height - Style.space(80) - spacing * (rowCount - 1)) / rowCount)))
         Repeater {
           model: root.windows
           delegate: BorderSurface {
@@ -125,6 +129,8 @@ Item {
             width: layout.cellWidth
             height: layout.cellHeight
             radius: Style.cornerRadius
+            antialiasing: true
+            border.pixelAligned: false
             color: Commons.Color.popups.background
             borderSpec: index === root.selectedIndex
               ? Border.hyprlandActiveSpec(Commons.Color.accent, Style.normalBorderWidth)
