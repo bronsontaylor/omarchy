@@ -45,7 +45,8 @@ function isDockWindow(window) {
 var MINIMIZED_WORKSPACE = "special:minimized"
 
 function isMinimizedWorkspace(name) {
-  return String(name || "") === MINIMIZED_WORKSPACE
+  var value = String(name || "")
+  return value === MINIMIZED_WORKSPACE || value.indexOf(MINIMIZED_WORKSPACE + "-output-") === 0
 }
 
 // A terminal app's window carries the app id its launcher gave the terminal,

@@ -9,7 +9,8 @@ function o.dock.activate(address, workspace, action)
   generation = generation + 1
   local request = generation
   local current = window.workspace
-  local minimized = current and current.name == "special:minimized"
+  local minimized = current and (current.name == "special:minimized"
+    or current.name:match("^special:minimized%-output%-"))
   local target = "address:" .. address
 
   local function raise()
@@ -29,12 +30,15 @@ function o.dock.activate(address, workspace, action)
     raise()
   elseif action == "toggle" and window.active then
     local monitor = current and current.monitor
+    -- Each output owns its hidden destination; using one shared workspace
+    -- transfers the animation target whenever another output minimizes.
+    local destination = monitor and ("special:minimized-output-" .. monitor.name) or "special:minimized"
     local realign = false
     if monitor then
       for _, hidden in ipairs(hl.get_workspaces()) do
-        if hidden.name == "special:minimized" and hidden.monitor
+        if hidden.name == destination and hidden.monitor
             and hidden.monitor.name ~= monitor.name then
-          hl.dispatch(hl.dsp.workspace.move({ workspace = "special:minimized", monitor = monitor.name }))
+          hl.dispatch(hl.dsp.workspace.move({ workspace = destination, monitor = monitor.name }))
           realign = true
           break
         end
@@ -49,7 +53,7 @@ function o.dock.activate(address, workspace, action)
     local function minimize()
       local live = hl.get_window(target)
       if not live or not live.mapped or not live.workspace or live.workspace.id ~= workspace then return end
-      hl.dispatch(hl.dsp.window.move({ window = target, workspace = "special:minimized", follow = false }))
+      hl.dispatch(hl.dsp.window.move({ window = target, workspace = destination, follow = false }))
       -- A later dock click owns focus; finishing this move must not steal it.
       if request == generation then hl.dispatch(hl.dsp.focus({ workspace = tostring(workspace) })) end
     end

@@ -119,6 +119,10 @@ const minimized = instances[1]
 minimized.windows[0].minimized = true
 assertDeepEqual(dock.orderItems(instances, instances.map(i => i.key), true).map(i => i.key), instances.map(i => i.key), 'minimizing alone does not rearrange instances')
 
+assert(dock.isMinimizedWorkspace('special:minimized'), 'legacy minimized windows remain recognized')
+assert(dock.isMinimizedWorkspace('special:minimized-output-DP-2'), 'per-output minimized windows remain in the dock')
+assert(!dock.isMinimizedWorkspace('special:scratchpad'), 'other special workspaces stay excluded')
+
 JS
 
 # Exercise the action decision against live-state shaped Lua objects. Dispatch
@@ -145,15 +149,15 @@ assert(calls[2].kind == "move" and calls[2].args.workspace == "special:minimized
 calls = {}
 windows["address:0xa"].workspace.monitor = { name = "DP-2" }
 o.dock.activate("0xa", 2, "toggle")
-assert(calls[1].kind == "workspace-move" and calls[1].args.monitor == "DP-2", "hidden workspace moves to source output before minimizing")
-assert(#calls == 2, "window move waits for hidden workspace alignment to commit")
-timers[1]()
-assert(calls[3].kind == "move", "window minimizes on the next compositor tick")
-timers = {}
-hidden.monitor.name = "DP-2"
+assert(calls[2].kind == "move" and calls[2].args.workspace == "special:minimized-output-DP-2", "second output has its own minimize destination")
 calls = {}
+windows["address:0xa"].workspace.monitor = { name = "DP-1" }
 o.dock.activate("0xa", 2, "toggle")
-assert(calls[1].kind == "tag", "same-output minimize does not move the hidden workspace")
+assert(calls[2].args.workspace == "special:minimized-output-DP-1", "alternating outputs does not reuse the other destination")
+calls = {}
+windows["address:0xa"].workspace.monitor = { name = "DP-2" }
+o.dock.activate("0xa", 2, "toggle")
+assert(calls[2].args.workspace == "special:minimized-output-DP-2", "returning to output two keeps its destination")
 calls = {}
 o.dock.activate("0xb", 2, "toggle")
 assert(calls[1].kind == "focus" and calls[1].args.workspace == "3", "remote click switches workspace before focusing")
@@ -165,6 +169,11 @@ o.dock.activate("0xb", 3, "focus")
 local count = #calls
 timers[1]()
 assert(#calls == count, "a stale restore callback cannot steal focus from a newer click")
+windows["address:0xa"].workspace = { id = -100, name = "special:minimized-output-DP-2" }
+calls = {}
+o.dock.activate("0xa", 2, "toggle")
+assert(calls[1].kind == "move" and calls[1].args.workspace == "2", "per-output minimized windows restore normally")
+
 LUA
 pass "dock clicks use compositor state and discard stale focus callbacks"
 
