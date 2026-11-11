@@ -28,6 +28,18 @@ function o.dock.activate(address, workspace, action)
     hl.dispatch(hl.dsp.focus({ workspace = tostring(current.id) }))
     raise()
   elseif action == "toggle" and window.active then
+    -- The shared hidden workspace may still belong to another output. Its
+    -- monitor determines the animation destination, so align it first.
+    local monitor = current and current.monitor
+    if monitor then
+      for _, hidden in ipairs(hl.get_workspaces()) do
+        if hidden.name == "special:minimized" and hidden.monitor
+            and hidden.monitor.name ~= monitor.name then
+          hl.dispatch(hl.dsp.workspace.move({ workspace = "special:minimized", monitor = monitor.name }))
+          break
+        end
+      end
+    end
     for _, tag in ipairs(window.tags or {}) do
       if tag:match("^omarchy%-minimized%-from%-") then
         hl.dispatch(hl.dsp.window.tag({ window = target, tag = "-" .. tag:gsub("%*$", "") }))

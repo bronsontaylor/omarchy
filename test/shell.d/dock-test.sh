@@ -129,17 +129,28 @@ local windows = {
   ["address:0xb"] = { mapped = true, hidden = false, active = false, workspace = { id = 3, name = "3" }, tags = {} },
 }
 local calls, timers = {}, {}
+local hidden = { name = "special:minimized", monitor = { name = "DP-1" } }
 local function dispatch(kind) return function(args) return { kind = kind, args = args } end end
 hl = {
   get_window = function(target) return windows[target] end,
+  get_workspaces = function() return { hidden } end,
   dispatch = function(call) table.insert(calls, call) end,
   timer = function(callback) table.insert(timers, callback) end,
-  dsp = { focus = dispatch("focus"), window = { move = dispatch("move"), tag = dispatch("tag"), alter_zorder = dispatch("raise") } },
+  dsp = { workspace = { move = dispatch("workspace-move") }, focus = dispatch("focus"), window = { move = dispatch("move"), tag = dispatch("tag"), alter_zorder = dispatch("raise") } },
 }
 o = {}
 dofile(os.getenv("ROOT") .. "/default/hypr/dock.lua")
 o.dock.activate("0xa", 2, "toggle")
 assert(calls[2].kind == "move" and calls[2].args.workspace == "special:minimized", "active click minimizes")
+calls = {}
+windows["address:0xa"].workspace.monitor = { name = "DP-2" }
+o.dock.activate("0xa", 2, "toggle")
+assert(calls[1].kind == "workspace-move" and calls[1].args.monitor == "DP-2", "hidden workspace moves to source output before minimizing")
+assert(calls[3].kind == "move", "window minimizes only after the output is aligned")
+hidden.monitor.name = "DP-2"
+calls = {}
+o.dock.activate("0xa", 2, "toggle")
+assert(calls[1].kind == "tag", "same-output minimize does not move the hidden workspace")
 calls = {}
 o.dock.activate("0xb", 2, "toggle")
 assert(calls[1].kind == "focus" and calls[1].args.workspace == "3", "remote click switches workspace before focusing")
