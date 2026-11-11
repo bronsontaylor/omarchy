@@ -192,7 +192,6 @@
   "setup.input.config": {"icon":"","label":"Input configuration","action":"omarchy-launch-config-editor \"$HOME/.config/hypr/input.lua\""},
   "setup.input.window-overview": {"icon":"󰒉","label":"Window overview"},
   "setup.input.window-overview.middle-click": {"icon":"󰍽","label":"Middle-click","checked":"omarchy-toggle-enabled window-overview-middle-click","action":"omarchy-hyprland-window-overview middle-click toggle"},
-  "setup.input.window-overview.three-finger-up": {"icon":"󰟸","label":"3 Finger swipe up","checked":"omarchy-toggle-enabled window-overview-three-finger-up","action":"omarchy-hyprland-window-overview three-finger-up toggle"},
   "setup.language": {"icon":"","label":"Language","provider":"languages"},
   "setup.network": {"icon":"󰛳","label":"Network","aliases":["network"]},
   "setup.network.dns": {"icon":"󰇖","label":"DNS","aliases":["dns"]},

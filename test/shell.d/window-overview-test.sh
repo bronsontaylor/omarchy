@@ -38,13 +38,13 @@ omarchy-hyprland-window-overview
 [[ ! -s $OVERVIEW_CALLS ]] || fail "overview leaves tiled workspaces alone"
 OVERVIEW_LAYOUT=floating omarchy-hyprland-window-overview
 grep -qxF 'shell toggle omarchy.window-overview' "$OVERVIEW_CALLS" || fail "floating workspace invokes the overview lifecycle"
-pass "overview triggers are opt-in and preserve tiled workspace input"
+pass "middle-click is opt-in and overview preserves tiled workspace input"
 
 mkdir -p "$HOME/.local/state/omarchy/toggles"
 touch "$HOME/.local/state/omarchy/toggles/window-overview-middle-click"
 ROOT="$ROOT" lua <<'LUA'
 local floating, binds, unbinds = false, 0, 0
-local callback, up, dispatched
+local callback, up, fourUp, dispatched
 package.preload["default.hypr.paths"] = function() return { home = os.getenv("HOME") } end
 package.preload["default.hypr.workspace-modes"] = function()
   return { is_floating = function() return floating end, on_change = function(fn) callback = fn end }
@@ -56,7 +56,10 @@ hl = {
     binds = binds + 1
     return { unbind = function() unbinds = unbinds + 1 end }
   end,
-  gesture = function(spec) if spec.fingers == 3 and spec.direction == "up" then up = spec end end,
+  gesture = function(spec)
+    if spec.fingers == 3 and spec.direction == "up" then up = spec end
+    if spec.fingers == 4 and spec.direction == "up" then fourUp = spec end
+  end,
   dispatch = function(value) dispatched = value end,
   dsp = { exec_cmd = function(command) return command end, workspace = { toggle_special = function(name) return name end } },
 }
@@ -67,11 +70,10 @@ assert(binds == 1, "floating workspace binds once")
 floating = false; callback()
 assert(unbinds == 1, "leaving floating releases middle-click")
 dofile(os.getenv("ROOT") .. "/default/hypr/gestures.lua")
-assert(up.action == "special" and up.workspace_name == "qconsole", "disabled overview preserves default swipe")
-local flag = assert(io.open(os.getenv("HOME") .. "/.local/state/omarchy/toggles/window-overview-three-finger-up", "w")); flag:close()
-dofile(os.getenv("ROOT") .. "/default/hypr/gestures.lua")
-up.action(); assert(dispatched == "qconsole", "tiled swipe keeps the console")
-floating = true; up.action()
-assert(dispatched == "omarchy-hyprland-window-overview", "enabled floating swipe opens overview")
+assert(up.action == "special" and up.workspace_name == "qconsole", "three-finger up preserves the console")
+assert(fourUp and type(fourUp.action) == "function", "four-finger up is available without a toggle")
+fourUp.action(); assert(dispatched == nil, "four-finger up leaves tiled workspaces alone")
+floating = true; fourUp.action()
+assert(dispatched == "omarchy-hyprland-window-overview", "four-finger up opens floating overview")
 LUA
-pass "middle-click is released on tiling and swipe preserves the stock console action"
+pass "middle-click releases on tiling, four-finger up opens floating overview, and three-finger up retains the console"

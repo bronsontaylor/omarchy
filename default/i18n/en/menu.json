@@ -1333,8 +1333,5 @@
   },
   "setup.input.window-overview.middle-click": {
     "label": "Middle-click"
-  },
-  "setup.input.window-overview.three-finger-up": {
-    "label": "3 Finger swipe up"
   }
 }

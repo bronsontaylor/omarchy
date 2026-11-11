@@ -12,25 +12,18 @@ hl.gesture({ fingers = 3, direction = "left", action = function() hl.dispatch(hl
 hl.gesture({ fingers = 3, direction = "right", action = function() hl.dispatch(hl.dsp.focus({ workspace = "r+1" })) end })
 
 -- Push up for the AI console, and pull down for the Omarchy menu.
-local paths = require("default.hypr.paths")
-local overview_swipe = io.open(paths.home .. "/.local/state/omarchy/toggles/window-overview-three-finger-up", "r")
-if overview_swipe then
-  overview_swipe:close()
-  hl.gesture({ fingers = 3, direction = "up", action = function()
-    local modes = require("default.hypr.workspace-modes")
-    local workspace = hl.get_active_workspace()
-    if workspace and modes.is_floating(workspace.id) then
-      hl.dispatch(hl.dsp.exec_cmd("omarchy-hyprland-window-overview"))
-    else
-      hl.dispatch(hl.dsp.workspace.toggle_special("qconsole"))
-    end
-  end })
-else
-  hl.gesture({ fingers = 3, direction = "up", action = "special", workspace_name = "qconsole" })
-end
+hl.gesture({ fingers = 3, direction = "up", action = "special", workspace_name = "qconsole" })
 hl.gesture({ fingers = 3, direction = "down", action = function() hl.dispatch(hl.dsp.global("omarchy:menu.root")) end })
 
 -- Four fingers take the active window along to the neighbouring workspace.
 hl.gesture({ fingers = 4, direction = "left", action = function() hl.dispatch(hl.dsp.window.move({ workspace = "r-1" })) end })
 hl.gesture({ fingers = 4, direction = "right", action = function() hl.dispatch(hl.dsp.window.move({ workspace = "r+1" })) end })
+-- Show all windows on the focused floating workspace.
+hl.gesture({ fingers = 4, direction = "up", action = function()
+  local modes = require("default.hypr.workspace-modes")
+  local workspace = hl.get_active_workspace()
+  if workspace and modes.is_floating(workspace.id) then
+    hl.dispatch(hl.dsp.exec_cmd("omarchy-hyprland-window-overview"))
+  end
+end })
 hl.gesture({ fingers = 4, direction = "down", action = "fullscreen" })
