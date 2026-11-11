@@ -198,14 +198,15 @@ PanelWindow {
   }
 
   function openMenu(item, slot, x, y) {
-    window.setMenuPoint(slot, x, y)
+    window.setMenuPoint(slot)
     window.settingsMenu = false
     window.menuItem = item
     window.menuSlot = slot
   }
 
   function openSettingsMenu(slot, x, y) {
-    window.setMenuPoint(slot, x, y)
+    if (slot === body) window.setMenuPoint(slot, x, y)
+    else window.setMenuPoint(slot)
     window.menuItem = null
     window.settingsMenu = true
     window.menuSlot = slot
