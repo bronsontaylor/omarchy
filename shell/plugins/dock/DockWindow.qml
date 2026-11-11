@@ -90,6 +90,7 @@ PanelWindow {
   // straight to the edge of the dock.
   readonly property int iconInset: Style.spacing.md
   readonly property real slotSize: iconSize + iconInset * 2
+  readonly property real groupGap: Style.space(24)
   // Room inward of the dock for its menus: the tallest, the apps button's,
   // has five rows.
   // A fixed cross-axis surface avoids Wayland configure churn while resizing.
@@ -345,8 +346,8 @@ PanelWindow {
       NumberAnimation { duration: Style.duration(240); easing.type: Easing.Bezier; easing.bezierCurve: Style.easeOut }
     }
     readonly property bool hasWindowGroup: !!window.dock && window.dock.items.some(function(item) { return item.windows.length > 0 })
-    width: panelPadding * 2 + slots.implicitWidth + (!window.vertical && hasWindowGroup && (window.dock && window.dock.instances) ? Style.space(40) : 0)
-    height: panelPadding * 2 + slots.implicitHeight + (window.vertical && hasWindowGroup && (window.dock && window.dock.instances) ? Style.space(40) : 0)
+    width: panelPadding * 2 + slots.implicitWidth + (!window.vertical && hasWindowGroup && (window.dock && window.dock.instances) ? window.groupGap : 0)
+    height: panelPadding * 2 + slots.implicitHeight + (window.vertical && hasWindowGroup && (window.dock && window.dock.instances) ? window.groupGap : 0)
     // How far the dock is tucked past its edge. Auto-hide slides it, but only
     // while the dock is on screen: arriving on a floating workspace shows it
     // where it belongs at once.
@@ -435,7 +436,7 @@ PanelWindow {
           readonly property var entry: window.dock ? window.dock.itemFor(key) : null
           // Keep every moving slot the same size. The separator gap belongs
           // to the whole window group, so it cannot stretch a moving group.
-          readonly property int sectionGap: (window.dock && window.dock.instances) && entry && entry.windows.length > 0 ? Style.space(40) : 0
+          readonly property int sectionGap: (window.dock && window.dock.instances) && entry && entry.windows.length > 0 ? window.groupGap : 0
           width: window.slotSize
           height: window.slotSize
           AppSlot {
@@ -452,7 +453,7 @@ PanelWindow {
   Rectangle {
     readonly property int launcherCount: window.dock
       ? window.dock.items.filter(function(item) { return item.windows.length === 0 }).length : 0
-    readonly property real boundary: body.panelPadding + (launcherCount + 1) * window.slotSize + Style.space(20)
+    readonly property real boundary: body.panelPadding + (launcherCount + 1) * window.slotSize + window.groupGap / 2
     transform: Translate { x: window.positionSlideX; y: window.positionSlideY }
     visible: (window.dock && window.dock.instances) && window.contentShown && launcherCount > 0 && appRepeater.count > launcherCount
     width: Style.space(5)
