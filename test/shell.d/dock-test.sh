@@ -126,38 +126,27 @@ assert(!dock.isMinimizedWorkspace('special:scratchpad'), 'other special workspac
 JS
 
 # Exercise the action decision against live-state shaped Lua objects. Dispatch
-# intent, rather than QML's cached activation bit, decides minimize vs focus.
+# clicks focus existing windows and can restore windows minimized elsewhere.
 ROOT="$ROOT" lua - <<'LUA'
 local windows = {
   ["address:0xa"] = { mapped = true, hidden = false, active = true, workspace = { id = 2, name = "2" }, tags = {} },
   ["address:0xb"] = { mapped = true, hidden = false, active = false, workspace = { id = 3, name = "3" }, tags = {} },
 }
 local calls, timers = {}, {}
-local hidden = { name = "special:minimized", monitor = { name = "DP-1" } }
 local function dispatch(kind) return function(args) return { kind = kind, args = args } end end
 hl = {
   get_window = function(target) return windows[target] end,
-  get_workspaces = function() return { hidden } end,
   dispatch = function(call) table.insert(calls, call) end,
   timer = function(callback) table.insert(timers, callback) end,
   dsp = { workspace = { move = dispatch("workspace-move") }, focus = dispatch("focus"), window = { move = dispatch("move"), tag = dispatch("tag"), alter_zorder = dispatch("raise") } },
 }
 o = {}
 dofile(os.getenv("ROOT") .. "/default/hypr/dock.lua")
-o.dock.activate("0xa", 2, "toggle")
-assert(calls[2].kind == "move" and calls[2].args.workspace == "special:minimized", "active click minimizes")
+o.dock.activate("0xa", 2, "focus")
+assert(calls[1].kind == "focus" and calls[2].kind == "raise", "active click keeps the window focused without minimizing")
 calls = {}
-windows["address:0xa"].workspace.monitor = { name = "DP-2" }
 o.dock.activate("0xa", 2, "toggle")
-assert(calls[2].kind == "move" and calls[2].args.workspace == "special:minimized-output-DP-2", "second output has its own minimize destination")
-calls = {}
-windows["address:0xa"].workspace.monitor = { name = "DP-1" }
-o.dock.activate("0xa", 2, "toggle")
-assert(calls[2].args.workspace == "special:minimized-output-DP-1", "alternating outputs does not reuse the other destination")
-calls = {}
-windows["address:0xa"].workspace.monitor = { name = "DP-2" }
-o.dock.activate("0xa", 2, "toggle")
-assert(calls[2].args.workspace == "special:minimized-output-DP-2", "returning to output two keeps its destination")
+assert(calls[1].kind == "focus" and calls[2].kind == "raise", "legacy toggle requests no longer minimize")
 calls = {}
 o.dock.activate("0xb", 2, "toggle")
 assert(calls[1].kind == "focus" and calls[1].args.workspace == "3", "remote click switches workspace before focusing")

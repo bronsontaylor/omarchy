@@ -172,7 +172,7 @@ Item {
     var index = root.instances ? 0 : DockModel.pickWindow(item.windows.map(function(win) {
       return { workspaceId: win.workspaceId, minimized: win.minimized, activated: win.toplevel.activated }
     }), workspace)
-    root.dispatchWindow(item.windows[index], workspace, "toggle")
+    root.dispatchWindow(item.windows[index], workspace, "focus")
   }
 
   function bringForward(win) {
