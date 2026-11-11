@@ -1322,9 +1322,6 @@
   "appearance.dock.instances": {
     "label": "Show instances"
   },
-  "appearance.dock.workspace-label": {
-    "label": "Workspace label"
-  },
   "appearance.dock.reset": {
     "label": "Restore defaults"
   },

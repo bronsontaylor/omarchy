@@ -711,7 +711,7 @@ PanelWindow {
 
     Item {
       // Badge shares the icon's geometry and animated transform.
-      visible: (window.dock && window.dock.workspaceLabel) && appSlot.otherWorkspace > 0 && window.contentShown
+      visible: (window.dock && window.dock.instances) && appSlot.otherWorkspace > 0 && window.contentShown
       x: appIcon.x
       y: appIcon.y
       width: appIcon.width

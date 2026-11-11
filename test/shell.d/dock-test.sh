@@ -218,8 +218,7 @@ omarchy_dock icon-size 48 >/dev/null
 omarchy_dock magnification 25 >/dev/null
 omarchy_dock shelf on >/dev/null
 omarchy_dock instances toggle >/dev/null
-omarchy_dock workspace-label on >/dev/null
-jq -e '.dock.iconSize == 48 and .dock.magnification == 25 and .dock.shelf and .dock.instances and .dock.workspaceLabel' "$home/.config/omarchy/shell.json" >/dev/null || fail "dock preferences persist together"
+jq -e '.dock.iconSize == 48 and .dock.magnification == 25 and .dock.shelf and .dock.instances' "$home/.config/omarchy/shell.json" >/dev/null || fail "dock preferences persist together"
 for value in -1 65 invalid 100000000000000000000000; do
   if omarchy_dock icon-size "$value" 2>/dev/null; then fail "dock rejects invalid icon sizes"; fi
 done

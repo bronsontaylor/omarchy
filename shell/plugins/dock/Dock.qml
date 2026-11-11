@@ -26,7 +26,6 @@ Item {
     typeof dockConfig.magnification === "number" ? dockConfig.magnification : 15)) / 100
   readonly property bool shelf: dockConfig.shelf === true
   readonly property bool instances: dockConfig.instances === true
-  readonly property bool workspaceLabel: instances && dockConfig.workspaceLabel === true
 
   function appKey(key) { return String(key || "").split("::window::")[0] }
   function workspaceNumber(workspace) { return workspace ? Number(workspace.id) : -1 }

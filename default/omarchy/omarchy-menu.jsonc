@@ -120,7 +120,6 @@
   "appearance.dock.magnification": {"icon":"󰍉","label":"Magnification","provider":"dock-magnification"},
   "appearance.dock.shelf": {"icon":"󰝤","label":"Dock shelf","checked":"[[ $(omarchy-dock shelf) == \"on\" ]]","action":"omarchy-dock shelf toggle"},
   "appearance.dock.instances": {"icon":"󰓩","label":"Show instances","checked":"[[ $(omarchy-dock instances) == \"on\" ]]","action":"omarchy-dock instances toggle"},
-  "appearance.dock.workspace-label": {"icon":"󰎤","label":"Workspace label","checked":"[[ $(omarchy-dock workspace-label) == \"on\" ]]","disabled":"[[ $(omarchy-dock instances) != \"on\" ]]","action":"omarchy-dock workspace-label toggle"},
   "appearance.dock.reset": {"icon":"","label":"Restore defaults","action":"omarchy-dock reset"},
   "appearance.workspace-layout": {"icon":"󱂬","label":"Workspace Layout","title":"Default Workspace Layout"},
   "appearance.workspace-layout.dwindle": {"icon":"󱓻","label":"Tiling","checked":"[[ $(omarchy-hyprland-workspace-layout-default) == \"dwindle\" ]]","action":"omarchy-hyprland-workspace-layout-default dwindle"},
