@@ -556,7 +556,8 @@ PanelWindow {
     property point pressPoint
     property bool dragged: false
     readonly property int windowCount: modelData ? modelData.windows.length : 0
-    readonly property bool minimized: windowCount > 0 && modelData.windows.every(function(win) { return win.minimized })
+    readonly property bool minimized: !!window.dock && window.dock.instances
+      && windowCount === 1 && modelData.windows[0].minimized
     readonly property bool active: !minimized && !!modelData && modelData.windows.some(function(win) { return !!win.toplevel && win.toplevel.activated })
     readonly property int otherWorkspace: {
       if (!modelData || !modelData.windows.length) return -1
@@ -663,7 +664,7 @@ PanelWindow {
       event.accepted = false
     }
 
-    // Use configured artwork and proportions; only minimized icons lose color.
+    // Only individual minimized instances lose color; grouped apps keep their artwork.
     DockIcon {
       id: appIcon
       x: (appSlot.width - width) / 2
@@ -674,7 +675,7 @@ PanelWindow {
       asynchronous: true
       smooth: true
       mipmap: true
-      layer.enabled: true
+      layer.enabled: !!window.dock && window.dock.instances
       // Keep the grayscale effect sharp when the icon grows on hover.
       layer.textureSize: Qt.size(Math.ceil(256 * appIcon.artworkRatio), 256)
       layer.smooth: true
