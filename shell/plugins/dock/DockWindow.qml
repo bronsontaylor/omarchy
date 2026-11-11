@@ -672,7 +672,7 @@ PanelWindow {
       width: window.iconSize
       height: window.iconSize
       source: window.dock && appSlot.modelData ? window.dock.iconFor(appSlot.modelData) : ""
-      sourceSize: Qt.size(window.iconSize * 2, window.iconSize * 2)
+      sourceSize: Qt.size(window.maximumIconSize * 2, window.maximumIconSize * 2)
       fillMode: Image.PreserveAspectFit
       asynchronous: true
       smooth: true
