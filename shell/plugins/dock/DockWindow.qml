@@ -384,7 +384,7 @@ PanelWindow {
         enabled: window.shown && !window.positionChanging
         NumberAnimation { duration: Style.duration(240); easing.type: Easing.Bezier; easing.bezierCurve: Style.easeOut }
       }
-      radius: Style.space(16)
+      radius: Style.cornerRadius
       // Theme shelf, fixed at 15% transparency (85% opacity).
       color: Qt.rgba(Commons.Color.background.r, Commons.Color.background.g, Commons.Color.background.b, 0.85)
       border.width: Math.max(1, Style.space(1))
@@ -726,7 +726,7 @@ PanelWindow {
         anchors.top: parent.top
         width: workspaceText.implicitWidth + Style.space(7)
         height: workspaceText.implicitHeight + Style.space(3)
-        radius: Style.space(4)
+        radius: Math.min(Style.cornerRadius, Style.spacing.sm)
         color: Qt.rgba(Commons.Color.background.r, Commons.Color.background.g, Commons.Color.background.b, 0.92)
         border.width: Math.max(1, Style.space(1))
         border.color: Qt.rgba(Commons.Color.foreground.r, Commons.Color.foreground.g, Commons.Color.foreground.b, 0.2)
@@ -738,7 +738,7 @@ PanelWindow {
           textFormat: Text.PlainText
           color: Commons.Color.foreground
           font.family: Style.font.family
-          font.pixelSize: Style.space(11)
+          font.pixelSize: Style.font.bodySmall
           font.bold: true
         }
       }
