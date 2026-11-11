@@ -227,12 +227,6 @@ omarchy_dock reset >/dev/null
 [[ $(omarchy_dock pinned) == "$pins_before" && $(omarchy_dock icon-size) == 36 && $(omarchy_dock magnification) == 15 && $(omarchy_dock instances) == "off" ]] || fail "dock reset restores behavior without losing pinned apps"
 pass "dock appearance settings validate, persist and reset without changing pins"
 
-# Transparent padding is excluded; opaque backgrounds remain artwork.
-magick -size 20x10 xc:white -fill black -draw 'rectangle 8,3 11,6' "$TMPDIR/opaque.png"
-normalized=$(HOME="$home" "$ROOT/bin/omarchy-dock-icon" "file://$TMPDIR/opaque.png")
-jq -e '.ratio == 2' <<<"$normalized" >/dev/null || fail "normalization retains opaque icon backgrounds"
-pass "icon normalization trims transparency without cropping opaque artwork"
-
 # Minimizing moves a window to the dock's hidden workspace without following
 # it, then focuses the workspace it left, so the next window opens there and
 # not beside the minimized one.

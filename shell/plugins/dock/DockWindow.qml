@@ -665,19 +665,21 @@ PanelWindow {
     }
 
     // Only individual minimized instances lose color; grouped apps keep their artwork.
-    DockIcon {
+    Image {
       id: appIcon
       x: (appSlot.width - width) / 2
       y: window.iconInset
-      visibleHeight: window.iconSize
-      originalSource: window.dock && appSlot.modelData ? window.dock.iconFor(appSlot.modelData) : ""
+      width: window.iconSize
+      height: window.iconSize
+      source: window.dock && appSlot.modelData ? window.dock.iconFor(appSlot.modelData) : ""
+      sourceSize: Qt.size(window.iconSize * 2, window.iconSize * 2)
       fillMode: Image.PreserveAspectFit
       asynchronous: true
       smooth: true
       mipmap: true
       layer.enabled: !!window.dock && window.dock.instances
       // Keep the grayscale effect sharp when the icon grows on hover.
-      layer.textureSize: Qt.size(Math.ceil(256 * appIcon.artworkRatio), 256)
+      layer.textureSize: Qt.size(256, 256)
       layer.smooth: true
       layer.effect: MultiEffect {
         saturation: appSlot.minimized ? -1 : 0
