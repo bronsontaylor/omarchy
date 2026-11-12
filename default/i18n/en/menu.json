@@ -1329,7 +1329,7 @@
     "label": "Input configuration"
   },
   "setup.input.window-overview": {
-    "label": "Window overview"
+    "label": "Workspace overview"
   },
   "setup.input.window-overview.middle-click": {
     "label": "Middle-click"
