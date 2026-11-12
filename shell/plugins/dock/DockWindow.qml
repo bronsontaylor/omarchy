@@ -277,8 +277,15 @@ PanelWindow {
     item: window.contentShown && !window.positionChanging ? body : null
 
     Region { item: window.shown && window.autohide && !window.positionChanging ? edgeTrigger : null }
-    Region { item: window.shown && window.autohide && !window.positionChanging ? edgeSensor : null }
     Region { item: menu.visible ? menu : null }
+    // Leave the fixed sensor exposed even after the dock's mask expands.
+    Region {
+      intersection: Intersection.Subtract
+      x: window.position === "right" ? window.width - edgeWindow.depth : 0
+      y: window.position === "bottom" ? window.height - edgeWindow.depth : 0
+      width: window.shown && window.autohide ? (window.vertical ? edgeWindow.depth : window.width) : 0
+      height: window.shown && window.autohide ? (window.vertical ? window.height : edgeWindow.depth) : 0
+    }
   }
 
   onAutohideChanged: window.revealed = false
@@ -292,19 +299,36 @@ PanelWindow {
     }
   }
 
-  // Catch a fast approach anywhere along the edge, including beyond the
-  // dock's ends. Keep this strip narrow so nearby app controls remain usable.
-  MouseArea {
-    id: edgeSensor
+  // Keep edge detection on its own mapped surface. The animated dock changes
+  // its input mask as it opens; the reveal target must stay stable throughout.
+  PanelWindow {
+    id: edgeWindow
     readonly property int depth: Math.max(1, Style.spacing.xxs)
-    x: window.position === "right" ? window.width - depth : 0
-    y: window.position === "bottom" ? window.height - depth : 0
-    width: window.vertical ? depth : window.width
-    height: window.vertical ? window.height : depth
-    hoverEnabled: true
-    acceptedButtons: Qt.NoButton
-    onEntered: window.revealed = true
-    onExited: hideTimer.restart()
+    screen: window.screen
+    visible: true
+    color: "transparent"
+    WlrLayershell.namespace: "omarchy-dock-edge"
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    exclusionMode: ExclusionMode.Normal
+    exclusiveZone: 0
+    anchors {
+      top: window.position !== "bottom"
+      bottom: window.position !== "top"
+      left: window.position !== "right"
+      right: window.position !== "left"
+    }
+    implicitWidth: window.vertical ? depth : window.screen.width
+    implicitHeight: window.vertical ? window.screen.height : depth
+    mask: Region { item: window.shown && window.autohide && !window.positionChanging ? edgeSensor : null }
+    MouseArea {
+      id: edgeSensor
+      anchors.fill: parent
+      hoverEnabled: true
+      acceptedButtons: Qt.NoButton
+      onEntered: window.revealed = true
+      onExited: hideTimer.restart()
+    }
   }
 
   // The strip along the screen edge that brings an auto-hidden dock back.
