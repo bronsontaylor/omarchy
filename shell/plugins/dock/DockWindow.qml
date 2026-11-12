@@ -295,12 +295,17 @@ PanelWindow {
   Item {
     id: edgeTrigger
 
-    readonly property int depth: window.gap + Style.spacing.xxs
+    // A usable target even when the pointer crosses the edge quickly. Once
+    // revealed, bridge the gap to the icons throughout their entrance.
+    readonly property int reach: Math.round(16 * Style.fontScale)
+    readonly property real depth: window.revealed
+      ? window.gap + (window.vertical ? body.width : body.height) : reach
+    readonly property int endPadding: Math.round(window.slotSize / 2)
 
-    x: window.position === "left" ? 0 : window.position === "right" ? window.width - depth : body.x
-    y: window.position === "top" ? 0 : window.position === "bottom" ? window.height - depth : body.y
-    width: window.vertical ? depth : body.width
-    height: window.vertical ? body.height : depth
+    x: window.position === "left" ? 0 : window.position === "right" ? window.width - depth : body.x - endPadding
+    y: window.position === "top" ? 0 : window.position === "bottom" ? window.height - depth : body.y - endPadding
+    width: window.vertical ? depth : body.width + endPadding * 2
+    height: window.vertical ? body.height + endPadding * 2 : depth
 
     HoverHandler {
       id: edgeHover
