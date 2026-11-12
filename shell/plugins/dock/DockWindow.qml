@@ -276,7 +276,7 @@ PanelWindow {
   mask: Region {
     item: window.contentShown && !window.positionChanging ? body : null
 
-    Region { item: window.shown && window.autohide && !window.positionChanging ? edgeTrigger : null }
+    Region { item: window.contentShown && window.autohide && !window.positionChanging ? edgeTrigger : null }
     Region { item: menu.visible ? menu : null }
     // Leave the fixed sensor exposed even after the dock's mask expands.
     Region {
@@ -303,7 +303,7 @@ PanelWindow {
   // its input mask as it opens; the reveal target must stay stable throughout.
   PanelWindow {
     id: edgeWindow
-    readonly property int depth: Math.max(1, Style.spacing.xxs)
+    readonly property int depth: 1
     screen: window.screen
     visible: true
     color: "transparent"
@@ -331,15 +331,11 @@ PanelWindow {
     }
   }
 
-  // The strip along the screen edge that brings an auto-hidden dock back.
+  // After edge entry reveals the dock, keep the path to its icons interactive.
   Item {
     id: edgeTrigger
 
-    // A usable target even when the pointer crosses the edge quickly. Once
-    // revealed, bridge the gap to the icons throughout their entrance.
-    readonly property int reach: Math.round(16 * Style.fontScale)
-    readonly property real depth: window.revealed
-      ? window.gap + (window.vertical ? body.width : body.height) : reach
+    readonly property real depth: window.gap + (window.vertical ? body.width : body.height)
     readonly property int endPadding: Math.round(window.slotSize / 2)
 
     x: window.position === "left" ? 0 : window.position === "right" ? window.width - depth : body.x - endPadding
@@ -349,6 +345,7 @@ PanelWindow {
 
     MouseArea {
       id: edgeHover
+      enabled: window.contentShown
       anchors.fill: parent
       hoverEnabled: true
       acceptedButtons: Qt.NoButton
