@@ -18,7 +18,19 @@ local function update()
   end
 end
 
-modes.on_change(update)
-hl.on("workspace.active", update)
-hl.on("monitor.focused", update)
+-- Focus events can arrive before the active monitor/workspace is committed.
+-- Coalesce them and inspect the destination once the dispatch has finished.
+local pending = false
+local function schedule_update()
+  if pending then return end
+  pending = true
+  hl.timer(function()
+    pending = false
+    update()
+  end, { type = "oneshot", timeout = 1 })
+end
+
+modes.on_change(schedule_update)
+hl.on("workspace.active", schedule_update)
+hl.on("monitor.focused", schedule_update)
 update()

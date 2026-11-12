@@ -45,13 +45,20 @@ touch "$HOME/.local/state/omarchy/toggles/window-overview-middle-click"
 ROOT="$ROOT" lua <<'LUA'
 local floating, binds, unbinds = false, 0, 0
 local callback, up, fourUp, dispatched
+local events, timers = {}, {}
+local function flush()
+  local queued = timers
+  timers = {}
+  for _, fn in ipairs(queued) do fn() end
+end
 package.preload["default.hypr.paths"] = function() return { home = os.getenv("HOME") } end
 package.preload["default.hypr.workspace-modes"] = function()
   return { is_floating = function() return floating end, on_change = function(fn) callback = fn end }
 end
 hl = {
   get_active_workspace = function() return { id = 2 } end,
-  on = function() end,
+  on = function(event, fn) events[event] = fn end,
+  timer = function(fn) table.insert(timers, fn) end,
   bind = function()
     binds = binds + 1
     return { unbind = function() unbinds = unbinds + 1 end }
@@ -65,10 +72,18 @@ hl = {
 }
 dofile(os.getenv("ROOT") .. "/default/hypr/window-overview.lua")
 assert(binds == 0, "tiled workspace keeps middle-click")
-floating = true; callback(); callback()
+floating = true; callback(); callback(); flush()
 assert(binds == 1, "floating workspace binds once")
-floating = false; callback()
+floating = false; callback(); flush()
 assert(unbinds == 1, "leaving floating releases middle-click")
+-- Workspace and monitor events precede the new focused state.
+events["workspace.active"](); events["monitor.focused"]()
+assert(#timers == 1, "focus events coalesce into one deferred update")
+floating = true; flush()
+assert(binds == 2, "entering floating binds using destination state")
+events["monitor.focused"](); events["workspace.active"]()
+floating = false; flush()
+assert(unbinds == 2, "entering tiled releases using destination state")
 dofile(os.getenv("ROOT") .. "/default/hypr/gestures.lua")
 assert(up.action == "special" and up.workspace_name == "qconsole", "three-finger up preserves the console")
 assert(fourUp and type(fourUp.action) == "function", "four-finger up is available without a toggle")
