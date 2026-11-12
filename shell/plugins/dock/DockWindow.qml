@@ -277,6 +277,7 @@ PanelWindow {
     item: window.contentShown && !window.positionChanging ? body : null
 
     Region { item: window.shown && window.autohide && !window.positionChanging ? edgeTrigger : null }
+    Region { item: window.shown && window.autohide && !window.positionChanging ? edgeSensor : null }
     Region { item: menu.visible ? menu : null }
   }
 
@@ -287,8 +288,23 @@ PanelWindow {
     // Long enough to cross a gap between the edge and the icons, no longer.
     interval: 150
     onTriggered: {
-      if (!bodyHover.hovered && !edgeHover.hovered && !window.menuOpen && !window.dragging) window.revealed = false
+      if (!bodyHover.hovered && !edgeHover.containsMouse && !edgeSensor.containsMouse && !window.menuOpen && !window.dragging) window.revealed = false
     }
+  }
+
+  // Catch a fast approach anywhere along the edge, including beyond the
+  // dock's ends. Keep this strip narrow so nearby app controls remain usable.
+  MouseArea {
+    id: edgeSensor
+    readonly property int depth: Math.max(1, Style.spacing.xxs)
+    x: window.position === "right" ? window.width - depth : 0
+    y: window.position === "bottom" ? window.height - depth : 0
+    width: window.vertical ? depth : window.width
+    height: window.vertical ? window.height : depth
+    hoverEnabled: true
+    acceptedButtons: Qt.NoButton
+    onEntered: window.revealed = true
+    onExited: hideTimer.restart()
   }
 
   // The strip along the screen edge that brings an auto-hidden dock back.
@@ -307,12 +323,13 @@ PanelWindow {
     width: window.vertical ? depth : body.width + endPadding * 2
     height: window.vertical ? body.height + endPadding * 2 : depth
 
-    HoverHandler {
+    MouseArea {
       id: edgeHover
-      onHoveredChanged: {
-        if (hovered) window.revealed = true
-        else hideTimer.restart()
-      }
+      anchors.fill: parent
+      hoverEnabled: true
+      acceptedButtons: Qt.NoButton
+      onEntered: window.revealed = true
+      onExited: hideTimer.restart()
     }
   }
 
