@@ -329,7 +329,7 @@ Item {
     },
     "dock-magnification": {
       checkAfterLabel: true,
-      script: "current=$(omarchy-dock magnification); for value in 0 5 10 15 20 25 30; do printf '%s%%\\t%s\\t%s\\n' \"$value\" \"$value\" \"$current\"; done",
+      script: "current=$(omarchy-dock magnification); for value in 0 5 10 15 20 25 30 35; do printf '%s%%\\t%s\\t%s\\n' \"$value\" \"$value\" \"$current\"; done",
       volatile: true,
       actionFor: function(value) { return "omarchy-dock magnification " + Util.shellQuote(value) }
     },
