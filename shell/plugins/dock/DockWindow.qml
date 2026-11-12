@@ -571,11 +571,11 @@ PanelWindow {
       Behavior on scale { enabled: !window.positionChanging; NumberAnimation { duration: Style.duration(120); easing.type: Easing.OutCubic } }
 
       Grid {
-        readonly property real square: window.iconSize * 0.26
+        readonly property real square: window.iconSize * 0.22
 
         anchors.centerIn: parent
         columns: 3
-        spacing: window.iconSize * 0.11
+        spacing: window.iconSize * 0.1
 
         Repeater {
           model: 9
