@@ -21,7 +21,7 @@ Item {
   readonly property bool vertical: DockModel.isVertical(position)
   readonly property bool autohide: dockConfig.autohide === true
 
-  readonly property int iconSize: Math.max(24, Math.min(64, typeof dockConfig.iconSize === "number" ? Math.round(dockConfig.iconSize) : 36))
+  readonly property int iconSize: Math.max(24, Math.min(66, typeof dockConfig.iconSize === "number" ? Math.round(dockConfig.iconSize) : 36))
   readonly property real magnification: Math.max(0, Math.min(50,
     typeof dockConfig.magnification === "number" ? dockConfig.magnification : 15)) / 100
   readonly property bool shelf: dockConfig.shelf === true

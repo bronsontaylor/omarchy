@@ -219,7 +219,9 @@ omarchy_dock magnification 25 >/dev/null
 omarchy_dock shelf on >/dev/null
 omarchy_dock instances toggle >/dev/null
 jq -e '.dock.iconSize == 48 and .dock.magnification == 25 and .dock.shelf and .dock.instances' "$home/.config/omarchy/shell.json" >/dev/null || fail "dock preferences persist together"
-for value in -1 65 invalid 100000000000000000000000; do
+omarchy_dock icon-size 66 >/dev/null
+[[ $(omarchy_dock icon-size) == 66 ]] || fail "dock accepts the largest size choice"
+for value in -1 67 invalid 100000000000000000000000; do
   if omarchy_dock icon-size "$value" 2>/dev/null; then fail "dock rejects invalid icon sizes"; fi
 done
 pins_before=$(omarchy_dock pinned)

@@ -96,7 +96,7 @@ PanelWindow {
   // Room inward of the dock for its menus: the tallest, the apps button's,
   // has five rows.
   // A fixed cross-axis surface avoids Wayland configure churn while resizing.
-  readonly property real maximumIconSize: 64 * Style.fontScale
+  readonly property real maximumIconSize: 66 * Style.fontScale
   readonly property real maximumSlotSize: maximumIconSize + iconInset * 2
   readonly property real maximumShelfPadding: Math.max(Style.space(12), maximumIconSize * 0.5 - iconInset + Style.space(6))
   readonly property int popupRoom: Style.spacing.popupRowHeight * 7 + Style.spacing.sm * 2 + Style.normalBorderWidth * 2 + gap * 2
