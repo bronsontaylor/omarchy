@@ -1311,27 +1311,27 @@
     "label": "User"
   },
   "appearance.dock.icon-size": {
-    "label": "Icon size"
+    "label": "Icon Size"
   },
   "appearance.dock.magnification": {
     "label": "Magnification"
   },
   "appearance.dock.shelf": {
-    "label": "Dock shelf"
+    "label": "Dock Shelf"
   },
   "appearance.dock.instances": {
-    "label": "Show instances"
+    "label": "Show Instances"
   },
   "appearance.dock.reset": {
-    "label": "Restore defaults"
+    "label": "Restore Defaults"
   },
   "setup.input.config": {
-    "label": "Input configuration"
+    "label": "Input Configuration"
   },
   "setup.input.window-overview": {
-    "label": "Workspace overview"
+    "label": "Workspace Overview"
   },
   "setup.input.window-overview.middle-click": {
-    "label": "Middle-click"
+    "label": "Middle-Click"
   }
 }

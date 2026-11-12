@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "omarchy.window-overview",
-  "name": "Workspace overview",
+  "name": "Workspace Overview",
   "version": "1.0.0",
   "author": "Omarchy",
   "description": "Select a window on a floating workspace",
