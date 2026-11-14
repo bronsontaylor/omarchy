@@ -11,6 +11,25 @@ trap 'rm -rf "$TMPDIR"' EXIT
 
 ROOT="$ROOT" run_node_test <<'JS'
 const dock = requireFromRoot('shell/plugins/dock/DockModel.js')
+const handoffQml = require('fs').readFileSync(process.env.ROOT + '/shell/plugins/dock/DockWindow.qml', 'utf8')
+const iconHoverBody = handoffQml.match(/readonly property bool iconsHovered: \{([\s\S]*?)\n  \}/)[1]
+const iconHover = new Function('launcherSlot', 'appRepeater', iconHoverBody)
+const hideBody = handoffQml.match(/id: hideTimer[\s\S]*?onTriggered: \{([\s\S]*?)\n    \}/)[1]
+const finishHide = new Function('window', 'bodyHover', 'edgeHover', 'edgeSensor', 'pinsHover', 'pinGapHover', hideBody)
+const handoffOutside = {hovered: false, containsMouse: false}
+const handoffLauncher = {pointerInside: false}, handoffIcon = {pointerInside: true}
+const handoffRepeater = {count: 1, itemAt: () => handoffIcon}
+const handoff = {revealed: true, iconsHovered: iconHover(handoffLauncher, handoffRepeater), menuOpen: false, dragging: false, positionChanging: false}
+finishHide(handoff, handoffOutside, handoffOutside, handoffOutside, handoffOutside, handoffOutside)
+assert(handoff.revealed, 'an app icon keeps the dock visible when edge and body hover have cleared')
+handoffIcon.pointerInside = false; handoffLauncher.pointerInside = true
+handoff.iconsHovered = iconHover(handoffLauncher, handoffRepeater)
+finishHide(handoff, handoffOutside, handoffOutside, handoffOutside, handoffOutside, handoffOutside)
+assert(handoff.revealed, 'the launcher also holds the dock during a hover handoff')
+handoffLauncher.pointerInside = false; handoff.iconsHovered = iconHover(handoffLauncher, handoffRepeater)
+finishHide(handoff, handoffOutside, handoffOutside, handoffOutside, handoffOutside, handoffOutside)
+assert(!handoff.revealed, 'leaving all dock targets still allows auto-hide')
+
 
 for (const [icon, count, length, extra] of [[66, 12, 742, 0], [36, 29, 1280, 24], [36, 120, 742, 24]]) {
   const fit = dock.fitSlots(icon, 6, count, length, extra)

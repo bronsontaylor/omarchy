@@ -82,6 +82,20 @@ PanelWindow {
   readonly property bool tucked: autohide && !positionChanging && !(revealed || menuOpen || dragging || insertIndex >= 0)
   readonly property bool contentShown: shown && !tucked
 
+  // Icon MouseAreas can own hover while the outer handlers hand it off.
+  readonly property bool iconsHovered: {
+    if (launcherSlot.pointerInside) return true
+    for (var i = 0; i < appRepeater.count; i++) {
+      var item = appRepeater.itemAt(i)
+      if (item && item.pointerInside) return true
+    }
+    return false
+  }
+  onIconsHoveredChanged: {
+    if (iconsHovered) hideTimer.stop()
+    else if (window.autohide) hideTimer.restart()
+  }
+
   // Preserve the model and all window delegates; only launcher slots fold away.
   readonly property int pinnedLauncherCount: dock ? dock.items.filter(function(item) {
     return item.pinned && item.windows.length === 0
@@ -377,7 +391,7 @@ PanelWindow {
     // Long enough to cross a gap between the edge and the icons, no longer.
     interval: 150
     onTriggered: {
-      if (!pinsHover.hovered && !pinGapHover.hovered && !bodyHover.hovered && !edgeHover.containsMouse && !edgeSensor.containsMouse && !window.menuOpen && !window.dragging && !window.positionChanging) window.revealed = false
+      if (!window.iconsHovered && !pinsHover.hovered && !pinGapHover.hovered && !bodyHover.hovered && !edgeHover.containsMouse && !edgeSensor.containsMouse && !window.menuOpen && !window.dragging && !window.positionChanging) window.revealed = false
     }
   }
 
@@ -409,6 +423,7 @@ PanelWindow {
       hoverEnabled: true
       acceptedButtons: Qt.NoButton
       onEntered: {
+        hideTimer.stop()
         window.revealed = true
         if (window.pinsExpanded) collapseTimer.stop()
       }
@@ -435,6 +450,7 @@ PanelWindow {
       hoverEnabled: true
       acceptedButtons: Qt.NoButton
       onEntered: {
+        hideTimer.stop()
         window.revealed = true
         if (window.pinsExpanded) collapseTimer.stop()
       }
@@ -465,7 +481,7 @@ PanelWindow {
     HoverHandler {
       id: pinGapHover
       onHoveredChanged: {
-        if (hovered) collapseTimer.stop()
+        if (hovered) { hideTimer.stop(); collapseTimer.stop() }
         else {
           collapseTimer.restart()
           if (window.autohide) hideTimer.restart()
@@ -566,7 +582,7 @@ PanelWindow {
       id: bodyHover
       margin: Math.max(window.inwardReach, window.sideReach)
       onHoveredChanged: {
-        if (hovered) collapseTimer.stop()
+        if (hovered) { hideTimer.stop(); collapseTimer.stop() }
         else {
           collapseTimer.restart()
           if (window.autohide) hideTimer.restart()
@@ -606,6 +622,7 @@ PanelWindow {
           required property int index
           required property string key
           readonly property var entry: window.dock ? window.dock.itemFor(key) : null
+          readonly property bool pointerInside: slotApp.pointerInside
           // Keep every moving slot the same size. The separator gap belongs
           // to the whole window group, so it cannot stretch a moving group.
           readonly property int sectionGap: (window.dock && window.dock.instances) && entry && entry.windows.length > 0 ? window.groupGap : 0
@@ -618,6 +635,7 @@ PanelWindow {
           // Clip partially revealed pins without shrinking their artwork or hit targets.
           clip: folding && reveal < 1 && window.dragIndex !== index
           AppSlot {
+            id: slotApp
             enabled: slotContainer.reveal > 0.95
             index: slotContainer.index
             key: slotContainer.key
@@ -649,6 +667,7 @@ PanelWindow {
 
     // Only the dragged icon is lifted while a drag is on; none of the others
     // pop as it passes over them.
+    readonly property bool pointerInside: mouse.containsMouse
     property bool hovered: mouse.containsMouse && !window.hoverStale && !window.dragging
     property bool pressed: mouse.pressed
     property alias mouse: mouse
