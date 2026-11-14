@@ -1333,5 +1333,11 @@
   },
   "setup.input.window-overview.middle-click": {
     "label": "Middle-Click"
+  },
+  "appearance.dock.collapse-pinned": {
+    "label": "Collapse Pinned"
+  },
+  "appearance.top-bar.scenes": {
+    "label": "Scenes"
   }
 }

@@ -2,7 +2,7 @@
 
 # omarchy:summary=Configure the dock shown on floating workspaces
 # omarchy:group=dock
-# omarchy:args=position [top|bottom|left|right] | autohide [on|off|toggle] | icon-size [24..66] | magnification [0..50] | shelf|instances [on|off|toggle] | reset | pinned [<desktop-id>...] | pin <desktop-id> | unpin <desktop-id>
+# omarchy:args=position [top|bottom|left|right] | autohide [on|off|toggle] | icon-size [24..66] | magnification [0..50] | shelf|instances|collapse-pinned [on|off|toggle] | reset | pinned [<desktop-id>...] | pin <desktop-id> | unpin <desktop-id>
 # omarchy:examples=omarchy dock position left | omarchy dock pin folio
 
 set -euo pipefail
@@ -22,6 +22,7 @@ Usage: omarchy dock <command> [args...]
   magnification [0..50]                Hover growth as a percentage
   shelf [on|off|toggle]                Theme-colored background behind icons
   instances [on|off|toggle]            One workspace-labeled icon per window
+  collapse-pinned [on|off|toggle]      Expand pinned launchers on hover
   reset                               Restore dock defaults, preserving pins
   pinned [<desktop-id>...]             Pinned desktop ids in dock order; prints
                                        them one per line when given none
@@ -105,7 +106,7 @@ cmd_flag() {
 
 cmd_reset() {
   (( $# == 0 )) || fail "reset takes no arguments"
-  commit "$NORMALIZE | .dock |= del(.position, .autohide, .iconSize, .magnification, .shelf, .instances, .workspaceLabel)"
+  commit "$NORMALIZE | .dock |= del(.position, .autohide, .iconSize, .magnification, .shelf, .instances, .collapsePinned, .workspaceLabel)"
 }
 
 cmd_pinned() {
@@ -155,6 +156,7 @@ case "$command" in
   icon-size) cmd_amount iconSize 24 66 36 "$@" ;;
   magnification) cmd_amount magnification 0 50 15 "$@" ;;
   shelf) cmd_flag shelf "$@" ;;
+  collapse-pinned) cmd_flag collapsePinned "$@" ;;
   instances) cmd_flag instances "$@" ;;
   reset) cmd_reset "$@" ;;
   pinned) cmd_pinned "$@" ;;

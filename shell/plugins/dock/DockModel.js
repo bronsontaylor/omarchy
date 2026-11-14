@@ -83,7 +83,7 @@ function buildItems(pinned, windows, instances) {
     })
     for (var w = 0; w < (windows || []).length; w++) {
       var win = windows[w]
-      if (isDockWindow(win)) separate.push({ key: win.key + "::window::" + win.address, appKey: win.key, pinned: false, windows: [win] })
+      if (isDockWindow(win)) separate.push({ key: win.key + "::window::" + win.address, appKey: win.key, pinned: false, appPinned: (pinned || []).indexOf(win.key) >= 0, windows: [win] })
     }
     return separate
   }
@@ -132,19 +132,15 @@ function orderItems(items, order, instances) {
   if (instances) {
     var launchers = result.filter(function(item) { return item.windows.length === 0 })
     var windows = result.filter(function(item) { return item.windows.length > 0 })
-    // A minimized window has no workspace of its own. Keep it in its current
-    // slot; only windows assigned to regular workspaces drive insertion.
-    for (var w = 1; w < windows.length; w++) {
-      var moving = windows[w].windows[0]
-      if (moving.minimized) continue
-      for (var before = 0; before < w; before++) {
-        var other = windows[before].windows[0]
-        if (!other.minimized && other.workspaceId > moving.workspaceId) {
-          windows.splice(before, 0, windows.splice(w, 1)[0])
-          break
-        }
-      }
-    }
+    // Sort live windows into the non-minimized slots, preserving the latter.
+    var rank = {}
+    for (var w = 0; w < windows.length; w++) rank[windows[w].key] = w
+    var live = windows.filter(function(item) { return !item.windows[0].minimized })
+    live.sort(function(a, b) {
+      return a.windows[0].workspaceId - b.windows[0].workspaceId || rank[a.key] - rank[b.key]
+    })
+    var next = 0
+    windows = windows.map(function(item) { return item.windows[0].minimized ? item : live[next++] })
     return launchers.concat(windows)
   }
   return result
@@ -200,8 +196,41 @@ function pickWindow(windows, workspaceId) {
 }
 
 
+// Land on an actual visible slot, not a model index hidden by folded pins.
+function nearestDropIndex(from, delta, slots) {
+  var source = slots.filter(function(slot) { return slot.index === from })[0]
+  if (!source) return from
+  var target = source.center + delta
+  var result = from
+  var distance = Infinity
+  for (var i = 0; i < slots.length; i++) {
+    var slot = slots[i]
+    if (!slot.enabled) continue
+    if (Math.abs(target - slot.center) < distance) {
+      result = slot.index
+      distance = Math.abs(target - slot.center)
+    }
+  }
+  return result
+}
+
+function fitSlots(icon, inset, count, length, extra) {
+  var capacity = Math.max(0, length - Math.max(0, extra || 0)) / Math.max(1, count)
+  var padding = Math.min(inset, capacity * inset / Math.max(1, icon + inset * 2))
+  var limit = Math.max(0, capacity - padding * 2)
+  return { iconSize: Math.min(icon, limit), iconLimit: limit, inset: padding }
+}
+
+
+// Preserve monitor-distinguishing labels: the second block starts at 21.
+function workspaceBadgeNumber(id) {
+  return id > 10 ? id + 10 : id
+}
+
 if (typeof module !== "undefined") {
   module.exports = {
+    fitSlots: fitSlots,
+    workspaceBadgeNumber: workspaceBadgeNumber,
     normalizePosition: normalizePosition,
     isVertical: isVertical,
     normalizeId: normalizeId,
@@ -213,6 +242,7 @@ if (typeof module !== "undefined") {
     orderItems: orderItems,
     orderWithKeyAt: orderWithKeyAt,
     dropIndex: dropIndex,
+    nearestDropIndex: nearestDropIndex,
     pinsInOrder: pinsInOrder,
     pickWindow: pickWindow
   }

@@ -25,6 +25,7 @@ Item {
   readonly property real magnification: Math.max(0, Math.min(50,
     typeof dockConfig.magnification === "number" ? dockConfig.magnification : 15)) / 100
   readonly property bool shelf: dockConfig.shelf === true
+  readonly property bool collapsePinned: dockConfig.collapsePinned === true
   readonly property bool instances: dockConfig.instances === true
 
   function appKey(key) { return String(key || "").split("::window::")[0] }
@@ -51,6 +52,36 @@ Item {
         out.push({ id: entry.id, execString: entry.execString, command: entry.command, runInTerminal: entry.runInTerminal })
     }
     return out
+  }
+
+  // An app launched from the dock pulses its dot until a new window of it
+  // shows up, or for ten seconds if none does.
+  property var launches: ({})
+  readonly property int launchTimeout: 10000
+
+  function isLaunching(key) {
+    return root.launches[root.appKey(key)] !== undefined
+  }
+
+  function settleLaunches() {
+    var next = {}
+    var changed = false
+    var now = Date.now()
+    for (var key in root.launches) {
+      var launch = root.launches[key]
+      var item = root.itemsByKey[key]
+      var windows = root.items.filter(function(other) { return (other.appKey || other.key) === key }).reduce(function(count, other) { return count + other.windows.length }, 0)
+      if (windows > launch.windows || now - launch.at > root.launchTimeout) changed = true
+      else next[key] = launch
+    }
+    if (changed) root.launches = next
+  }
+
+  Timer {
+    interval: 1000
+    repeat: true
+    running: Object.keys(root.launches).length > 0
+    onTriggered: root.settleLaunches()
   }
 
   function entryForAppId(appId) {
@@ -135,6 +166,7 @@ Item {
       else itemModel.insert(i, { key: keys[i] })
     }
     if (itemModel.count > keys.length) itemModel.remove(keys.length, itemModel.count - keys.length)
+    root.settleLaunches()
     if (root.instances && root.order.join("\n") !== keys.join("\n")) root.order = keys
   }
 
@@ -149,7 +181,14 @@ Item {
   }
 
   function launch(item) {
-    root.launchEntry(root.entryFor(item))
+    var entry = entryFor(item)
+    if (!entry) return
+    var next = Object.assign({}, root.launches)
+    var key = item.appKey || item.key
+    var count = root.items.filter(function(other) { return (other.appKey || other.key) === key }).reduce(function(total, other) { return total + other.windows.length }, 0)
+    next[key] = { at: Date.now(), windows: count }
+    root.launches = next
+    root.launchEntry(entry)
   }
 
   function launchEntry(entry) {
@@ -237,7 +276,9 @@ Item {
   // its slot while it still runs.
   function setPinned(key, pinned) {
     if (!key) return
+    key = root.appKey(key)
     if (pinned) {
+      if (root.pinnedKeys.indexOf(key) >= 0) return
       root.placeAt(key, root.shownKeys().length)
     } else {
       root.pendingPins = root.pinnedKeys.filter(function(other) { return other !== root.appKey(key) })

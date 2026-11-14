@@ -12,6 +12,51 @@ trap 'rm -rf "$TMPDIR"' EXIT
 ROOT="$ROOT" run_node_test <<'JS'
 const dock = requireFromRoot('shell/plugins/dock/DockModel.js')
 
+for (const [icon, count, length, extra] of [[66, 12, 742, 0], [36, 29, 1280, 24], [36, 120, 742, 24]]) {
+  const fit = dock.fitSlots(icon, 6, count, length, extra)
+  assert((fit.iconSize + fit.inset * 2) * count + extra <= length + 0.0001, 'all dock slots fit the available edge: ' + count + ' slots on ' + length)
+  assert(fit.iconSize > 0 && fit.iconSize <= icon, 'fitting keeps every icon visible without enlarging requested icons')
+}
+const dragQml = require('fs').readFileSync(process.env.ROOT + '/shell/plugins/dock/DockWindow.qml', 'utf8')
+const method = name => dragQml.match(new RegExp('function ' + name + '\\([^)]*\\) \\{([\\s\\S]*?)\\n  \\}'))[1]
+const dropWindow = { position: 'left', vertical: true, width: 240, height: 742, gap: 3, shown: true, autohide: false, insertIndex: -1, externalDropArea: null,
+  origin: () => ({x: 0, y: 0}), slotIndexAt: () => 5, settleShifts: () => {}, dock: {pinAt: key => { pinnedDrop = key }} }
+Object.defineProperty(dropWindow, 'slotSize', {get() { const fit = dock.fitSlots(66, 6, 12 + (this.insertIndex >= 0 ? 1 : 0), 736, 0); return fit.iconSize + fit.inset * 2 }})
+const dropBody = { x: 3, get y() { return (742 - this.height) / 2 }, get width() { return dropWindow.slotSize }, get height() { return dropWindow.slotSize * (12 + (dropWindow.insertIndex >= 0 ? 1 : 0)) } }
+const moveDrop = new Function('window', 'body', 'Qt', 'screenX', 'screenY', method('moveExternalDrag'))
+dropWindow.moveExternalDrag = (x, y) => moveDrop(dropWindow, dropBody, {point: (x,y) => ({x,y})}, x, y)
+const initialSlot = dropWindow.slotSize
+dropWindow.moveExternalDrag(120, 371)
+assert(dropWindow.insertIndex >= 0 && dropWindow.slotSize < initialSlot, 'a crowded dock shows a fitted app-drop preview')
+dropWindow.moveExternalDrag(120, 371)
+assert(dropWindow.insertIndex >= 0, 'preview shrink cannot reject the stationary drag pointer')
+let pinnedDrop = null
+const timer = {restart() {}}
+dropWindow.endExternalDrag = () => new Function('window', 'collapseTimer', 'hideTimer', method('endExternalDrag'))(dropWindow, timer, timer)
+new Function('window', 'screenX', 'screenY', 'key', method('dropExternalDrag'))(dropWindow, 120, 371, 'org.example.Drop')
+assertEqual(pinnedDrop, 'org.example.Drop', 'releasing a crowded preview pins the app')
+assertEqual(dropWindow.externalDropArea, null, 'the next drag starts with fresh acceptance bounds')
+
+const roomy = dock.fitSlots(36, 6, 4, 1280, 0)
+assertEqual(roomy.iconSize, 36, 'a dock that already fits keeps its normal icon size')
+assertEqual(roomy.inset, 6, 'a dock that already fits keeps its normal spacing')
+
+const dockSource = require('fs').readFileSync(process.env.ROOT + '/shell/plugins/dock/Dock.qml', 'utf8')
+const keyBody = dockSource.match(/function appKey\(key\) \{([^}]+)\}/)[1]
+const pulseBody = dockSource.match(/function isLaunching\(key\) \{([^}]+)\}/)[1]
+const launchingRoot = { appKey: new Function('key', keyBody), launches: { 'org.example.App': {} } }
+const isLaunching = new Function('root', 'key', pulseBody)
+assert(isLaunching(launchingRoot, 'org.example.App::window::0xabc'), 'window-instance launch feedback resolves the shared app identity')
+assert(!isLaunching(launchingRoot, 'org.example.Other::window::0xdef'), 'launch feedback does not pulse another app')
+
+
+
+assertEqual(dock.workspaceBadgeNumber(1), 1, 'first-monitor workspace badges keep their number')
+assertEqual(dock.workspaceBadgeNumber(10), 10, 'the tenth workspace never becomes a zero badge')
+assertEqual(dock.workspaceBadgeNumber(11), 21, 'monitor two workspace one is labelled 21')
+assertEqual(dock.workspaceBadgeNumber(12), 22, 'monitor two workspace two is labelled 22')
+assertEqual(dock.workspaceBadgeNumber(20), 30, 'the second block keeps the previous complete numbering')
+
 assertEqual(dock.normalizePosition('left'), 'left', 'dock accepts a valid position')
 assertEqual(dock.normalizePosition(' Top '), 'top', 'dock reads a position loosely')
 assertEqual(dock.normalizePosition('diagonal'), 'bottom', 'dock falls back to the bottom')
@@ -121,7 +166,27 @@ assertDeepEqual(dock.orderItems(instances, instances.map(i => i.key), true).map(
 
 assert(dock.isMinimizedWorkspace('special:minimized'), 'legacy minimized windows remain recognized')
 assert(dock.isMinimizedWorkspace('special:minimized-output-DP-2'), 'per-output minimized windows remain in the dock')
+assert(dock.isMinimizedWorkspace('special:minimized-output-1'), 'a staged restore stays in the dock')
 assert(!dock.isMinimizedWorkspace('special:scratchpad'), 'other special workspaces stay excluded')
+
+const held = { key: 'M', windows: [{ minimized: true, workspaceId: -99 }] }
+const liveA = { key: 'A', windows: [{ workspaceId: 5 }] }
+const liveB = { key: 'B', windows: [{ workspaceId: 3 }] }
+assertDeepEqual(dock.orderItems([liveA, held, liveB], ['A', 'M', 'B'], true).map(i => i.key), ['B', 'M', 'A'], 'workspace changes sort live windows around a fixed minimized slot')
+assert(instances[1].appPinned && !instances[1].pinned, 'a pinned app instance keeps its menu pin state separate from launcher placement')
+
+
+const folded = [
+  { index: 0, center: 24, enabled: false },
+  { index: 1, center: 24, enabled: false },
+  { index: 2, center: 24, enabled: true },
+  { index: 3, center: 72, enabled: true }
+]
+assertEqual(dock.nearestDropIndex(2, 48, folded), 3, 'dragging beside collapsed pins lands on the visible next app')
+assertEqual(dock.nearestDropIndex(2, -500, folded), 2, 'dragging across hidden pins cannot save an invisible landing slot')
+assertEqual(dock.nearestDropIndex(3, -48, folded), 2, 'backward dragging uses actual visible slot centers')
+const expanded = folded.map((slot, i) => ({ index: i, center: i * 48 + 24, enabled: true }))
+assertEqual(dock.nearestDropIndex(3, -144, expanded), 0, 'expanded launchers retain normal full-row drag destinations')
 
 JS
 
@@ -136,6 +201,9 @@ local calls, timers = {}, {}
 local function dispatch(kind) return function(args) return { kind = kind, args = args } end end
 hl = {
   get_window = function(target) return windows[target] end,
+  get_workspace = function() return nil end,
+  window_rule = function() end,
+  workspace_rule = function() end,
   dispatch = function(call) table.insert(calls, call) end,
   timer = function(callback) table.insert(timers, callback) end,
   dsp = { workspace = { move = dispatch("workspace-move") }, focus = dispatch("focus"), window = { move = dispatch("move"), tag = dispatch("tag"), alter_zorder = dispatch("raise") } },
@@ -158,6 +226,44 @@ o.dock.activate("0xb", 3, "focus")
 local count = #calls
 timers[1]()
 assert(#calls == count, "a stale restore callback cannot steal focus from a newer click")
+
+-- Cross-monitor restores settle while hidden, then use the normal reveal.
+calls, timers = {}, {}
+local destination = { id = 1, name = "eDP-1" }
+hl.get_workspace = function() return { monitor = destination } end
+windows["address:0xa"].monitor = { id = 2, name = "DP-2" }
+hl.dispatch = function(call)
+  table.insert(calls, call)
+  if call.kind == "move" then
+    windows[call.args.window].workspace = { name = call.args.workspace }
+  end
+end
+o.dock.activate("0xa", 2, "focus")
+assert(calls[1].kind == "tag" and calls[1].args.tag == "+omarchy-dock-restore", "placement disables motion only for the restoring window")
+assert(calls[2].args.workspace == "special:minimized-output-1", "cross-monitor placement happens on a hidden destination workspace")
+timers[1]()
+assert(calls[3].args.tag == "-omarchy-dock-restore" and calls[4].args.workspace == "2", "normal animations return before the window is revealed")
+timers[2]()
+assert(calls[5].kind == "focus" and calls[6].kind == "raise", "restored window receives focus after placement")
+
+calls, timers = {}, {}
+windows["address:0xa"].workspace = { name = "special:minimized" }
+o.dock.activate("0xa", 2, "focus")
+o.dock.activate("0xa", 3, "focus")
+local before = #calls
+timers[1]()
+assert(#calls == before, "an older placement cannot override a second restore click")
+timers[2]()
+assert(calls[#calls].args.workspace == "3", "the latest restore destination wins")
+
+calls, timers = {}, {}
+windows["address:0xa"].workspace = { name = "special:minimized" }
+o.dock.activate("0xa", 2, "focus")
+windows["address:0xa"].workspace = { name = "4" }
+timers[1]()
+assert(calls[#calls].args.tag == "-omarchy-dock-restore", "a manual move cancels placement and restores animation rules")
+
+hl.get_workspace = function() return nil end
 windows["address:0xa"].workspace = { id = -100, name = "special:minimized-output-DP-2" }
 calls = {}
 o.dock.activate("0xa", 2, "toggle")
@@ -216,6 +322,10 @@ pass "dock auto-hide is set through omarchy-dock autohide"
 
 omarchy_dock icon-size 48 >/dev/null
 omarchy_dock magnification 25 >/dev/null
+[[ $(omarchy_dock collapse-pinned) == "off" ]] || fail "pins start expanded"
+omarchy_dock collapse-pinned toggle >/dev/null
+[[ $(omarchy_dock collapse-pinned) == "on" ]] || fail "pin collapse toggles and reads back"
+if omarchy_dock collapse-pinned sometimes 2>/dev/null; then fail "invalid pin collapse value accepted"; fi
 omarchy_dock shelf on >/dev/null
 omarchy_dock instances toggle >/dev/null
 jq -e '.dock.iconSize == 48 and .dock.magnification == 25 and .dock.shelf and .dock.instances' "$home/.config/omarchy/shell.json" >/dev/null || fail "dock preferences persist together"
@@ -226,7 +336,7 @@ for value in -1 67 invalid 100000000000000000000000; do
 done
 pins_before=$(omarchy_dock pinned)
 omarchy_dock reset >/dev/null
-[[ $(omarchy_dock pinned) == "$pins_before" && $(omarchy_dock icon-size) == 36 && $(omarchy_dock magnification) == 15 && $(omarchy_dock instances) == "off" ]] || fail "dock reset restores behavior without losing pinned apps"
+[[ $(omarchy_dock pinned) == "$pins_before" && $(omarchy_dock icon-size) == 36 && $(omarchy_dock magnification) == 15 && $(omarchy_dock instances) == "off" && $(omarchy_dock collapse-pinned) == "off" ]] || fail "dock reset restores behavior without losing pinned apps"
 pass "dock appearance settings validate, persist and reset without changing pins"
 
 # Minimizing moves a window to the dock's hidden workspace without following
