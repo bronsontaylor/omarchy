@@ -82,14 +82,12 @@ PanelWindow {
   readonly property bool tucked: autohide && !positionChanging && !(revealed || menuOpen || dragging || insertIndex >= 0)
   readonly property bool contentShown: shown && !tucked
 
-  // Icon MouseAreas can own hover while the outer handlers hand it off.
-  readonly property bool iconsHovered: {
-    if (launcherSlot.pointerInside) return true
-    for (var i = 0; i < appRepeater.count; i++) {
-      var item = appRepeater.itemAt(i)
-      if (item && item.pointerInside) return true
-    }
-    return false
+  // Track the slot itself, including when another layout wraps its delegate.
+  property Item hoveredIcon: null
+  readonly property bool iconsHovered: !!window.hoveredIcon && window.hoveredIcon.pointerInside
+  function trackIconHover(icon) {
+    if (icon.pointerInside) window.hoveredIcon = icon
+    else if (window.hoveredIcon === icon) window.hoveredIcon = null
   }
   onIconsHoveredChanged: {
     if (iconsHovered) hideTimer.stop()
@@ -622,7 +620,6 @@ PanelWindow {
           required property int index
           required property string key
           readonly property var entry: window.dock ? window.dock.itemFor(key) : null
-          readonly property bool pointerInside: slotApp.pointerInside
           // Keep every moving slot the same size. The separator gap belongs
           // to the whole window group, so it cannot stretch a moving group.
           readonly property int sectionGap: (window.dock && window.dock.instances) && entry && entry.windows.length > 0 ? window.groupGap : 0
@@ -635,7 +632,6 @@ PanelWindow {
           // Clip partially revealed pins without shrinking their artwork or hit targets.
           clip: folding && reveal < 1 && window.dragIndex !== index
           AppSlot {
-            id: slotApp
             enabled: slotContainer.reveal > 0.95
             index: slotContainer.index
             key: slotContainer.key
@@ -668,6 +664,7 @@ PanelWindow {
     // Only the dragged icon is lifted while a drag is on; none of the others
     // pop as it passes over them.
     readonly property bool pointerInside: mouse.containsMouse
+    onPointerInsideChanged: window.trackIconHover(slot)
     property bool hovered: mouse.containsMouse && !window.hoverStale && !window.dragging
     property bool pressed: mouse.pressed
     property alias mouse: mouse
