@@ -52,7 +52,7 @@ PanelWindow {
     ScriptAction {
       script: {
         window.hoverStale = true
-        window.dropPoint = body.mapToItem(window.contentItem, bodyHover.point.position.x, bodyHover.point.position.y)
+        window.dropPoint = bodyHover.point.position
         window.positionChanging = false
         if (window.autohide) hideTimer.restart()
       }
@@ -578,7 +578,7 @@ PanelWindow {
 
     HoverHandler {
       id: bodyHover
-      margin: Math.max(window.inwardReach, window.sideReach)
+      parent: window.contentItem
       onHoveredChanged: {
         if (hovered) { hideTimer.stop(); collapseTimer.stop() }
         else {
@@ -589,7 +589,7 @@ PanelWindow {
       // Only a real move clears it: the release itself reports the pointer too.
       onPointChanged: {
         if (!window.hoverStale || window.dragging) return
-        var at = body.mapToItem(window.contentItem, point.position.x, point.position.y)
+        var at = point.position
         if (Math.hypot(at.x - window.dropPoint.x, at.y - window.dropPoint.y) > Style.space(4)) window.hoverStale = false
       }
     }
@@ -687,7 +687,9 @@ PanelWindow {
       if (window.positionChanging || !bodyHover.hovered || window.hoverStale || window.dragging
           || window.insertIndex >= 0 || !window.contentShown) return 0
       var pointer = bodyHover.point.position
-      var center = slot.mapToItem(body, slot.width / 2, slot.height / 2)
+      if (menu.visible && pointer.x >= menu.x && pointer.x <= menu.x + menu.width
+          && pointer.y >= menu.y && pointer.y <= menu.y + menu.height) return 0
+      var center = slot.mapToItem(window.contentItem, slot.width / 2, slot.height / 2)
       var distance = Math.abs(window.vertical ? pointer.y - center.y : pointer.x - center.x)
       var reach = window.slotSize * 2
       return distance < reach ? (1 + Math.cos(Math.PI * distance / reach)) / 2 : 0
